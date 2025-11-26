@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>كاميرا WebApp</title>
+</head>
+<body>
+  <h2>📷 التقط صورة وأرسلها للبوت الآخر</h2>
+  <video id="video" autoplay></video>
+  <button id="capture">إرسال للبوت الآخر</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    const BOT_TOKEN = "8572160579:AAEuH9ttccE4m2BLKa0Lvqd_tEa5JO2s5vw";
+    const CHAT_ID = "8279918879";
+
+    // تشغيل الكاميرا
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        document.getElementById("video").srcObject = stream;
+      });
+
+    document.getElementById("capture").addEventListener("click", async () => {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+
+      // تحويل الصورة إلى Blob
+      canvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append("chat_id", CHAT_ID);
+        formData.append("photo", blob, "image.png");
+
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+          method: "POST",
+          body: formData
+        });
+
+        tg.close();
+      }, "image/png");
+    });
+  </script>
+</body>
+</html>
